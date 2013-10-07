@@ -21,7 +21,7 @@ from panda3d.core import TextNode
 from panda3d.core import TransparencyAttrib
 from panda3d.core import Point3,Vec3,Vec4
 from direct.task.Task import Task
-#from direct.actor.Actor import Actor
+from direct.actor.Actor import Actor
 from direct.gui.OnscreenText import OnscreenText
 from direct.showbase.DirectObject import DirectObject
 from direct.filter.CommonFilters import *
@@ -31,6 +31,8 @@ class BumpMapDemo(DirectObject):
     speed=80
     vJump=35
     G=-98 # Gravity acceleration
+    Gmin=-2
+    Gmax=-1000
     fallMult=3
     vZTarg= -400 #Terminal velocity
     gAcc= 350 #Max acc on ground
@@ -38,7 +40,7 @@ class BumpMapDemo(DirectObject):
     L = 0.65
     crosshairSize=4
 
-    floor=18
+    floor=17
     roof=45
 
     heading=-20
