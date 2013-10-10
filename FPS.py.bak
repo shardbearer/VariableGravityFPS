@@ -40,7 +40,7 @@ class BumpMapDemo(DirectObject):
     speed=80
     VJumpDef=35
     VJumpMax=200
-    jumpMaxG=-300
+    jumpMaxG=300
     Acc= 350 #Max acc on ground
     jumpSlow=.9 #Coefficient for slowing down horizontal speed when jumping
     jumpAgainCoef=.7
@@ -56,8 +56,8 @@ class BumpMapDemo(DirectObject):
     roof=9999999999-eyeHeight
 
     Gdef=-98 # Gravity acceleration
-    Gmin=-30
-    Gmax=-1000
+    Gmin=30
+    Gmax=1000
     Ginc=1.5
     VZTargDef= -500 #Terminal velocity
     
@@ -125,8 +125,8 @@ class BumpMapDemo(DirectObject):
         self.accept("f", self.setRight, [0, 1])
         self.accept("f-up", self.setRight, [0, 0])
         self.accept("r", self.setFlip)
-        self.accept("wheel_up", self.gravUp)
-        self.accept("wheel_down", self.gravDown)
+        self.accept("wheel_up", self.gravDown)
+        self.accept("wheel_down", self.gravUp)
 
         alight = AmbientLight('alight')
         alight.setColor(Vec4(self.L, self.L, self.L, 1))
@@ -158,34 +158,36 @@ class BumpMapDemo(DirectObject):
         self.right[btn] = value
 
     def gravUp(self):
-        if self.G>self.Gmax:
-            self.G*=self.Ginc
         if self.G<self.Gmax:
+            self.G*=self.Ginc
+        if self.G>self.Gmax:
             self.G=self.Gmax
         
-        self.VJump = self.VJumpDef * (-98.0/self.G)
+        self.VJump = self.VJumpDef * (98.0/self.G)
         if self.VJump > self.VJumpMax:
             self.VJump = self.VJumpMax
 
-        self.VZTarg = self.VZTargDef * (self.G/-98.0)
+        self.VZTarg = self.VZTargDef * (self.G/98.0)
 
     def gravDown(self):
-        if self.G<self.Gmin:
-            self.G*=1.0/self.Ginc
         if self.G>self.Gmin:
+            self.G*=1.0/self.Ginc
+        if self.G<self.Gmin:
             self.G=self.Gmin
       
-        self.VJump = self.VJumpDef * (-98.0/self.G)
+        self.VJump = self.VJumpDef * (98.0/self.G)
         if self.VJump > self.VJumpMax:
             self.VJump = self.VJumpMax
 
-        self.VZTarg = self.VZTargDef * (self.G/-98.0)
+        self.VZTarg = self.VZTargDef * (self.G/98.0)
     
     def setFlip(self):
         if self.roll == 0 or self.roll == 180:
             self.flip *= -1
 
     def controlCamera(self, task):
+        print "loop"
+        print self.VZ
         self.X = base.camera.getX()
         self.Y = base.camera.getY()
         self.Z = base.camera.getZ()
@@ -218,8 +220,10 @@ class BumpMapDemo(DirectObject):
            
         base.camera.setHpr(self.heading, self.pitch, self.roll)
 
+        print self.VZ
+
         if (self.VZ * self.flip) > self.VZTarg:
-            self.VZ += self.G * self.dt * self.flip #Gravity
+            self.VZ -= self.G * self.dt * self.flip #Gravity
         
         if (self.floor >= self.Z and self.VZ < 0) or (self.roof <= self.Z and self.VZ > 0): #Stop moving if you hit the floor or ceiling
             if(abs(self.VZ)>self.Vhurt):
@@ -250,7 +254,7 @@ class BumpMapDemo(DirectObject):
                 self.VX = self.VXTarg*.5
                 self.VY = self.VYTarg*.5
             
-            if self.jump[0] and self.G >= self.jumpMaxG: #Jump
+            if self.jump[0] and abs(self.G) <= self.jumpMaxG: #Jump
                 self.VZ = self.VJump * self.flip
             
             self.XAccDir=cmp(self.VXTarg, self.VX)
