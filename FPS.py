@@ -28,23 +28,27 @@ from direct.filter.CommonFilters import *
 import sys,os
 
 class BumpMapDemo(DirectObject):
+    ratio=resX/float(resY)
     speed=80
     vJump=35
     G=-98 # Gravity acceleration
-    Gmin=-2
-    Gmax=-1000
+    Gmin=-5
+    Gmax=-500
+    Ginc=1
     fallMult=3
     vZTarg= -400 #Terminal velocity
     gAcc= 350 #Max acc on ground
     jumpSlow=.9 #Slow down horizontal speed when jumping
     L = 0.65
     crosshairSize=4
+    health=100   
 
     floor=17
     roof=45
 
     heading=-20
     pitch=-20
+    roll=0
     key=[0,0,0]
     forward=[0]
     back=[0]
@@ -59,11 +63,12 @@ class BumpMapDemo(DirectObject):
     k=0
 
     def __init__(self):
-        self.title = OnscreenText(text="Adrian's Unamed Game", style=1, fg=(1,1,1,1), pos=(-1.0, 1.25), align=TextNode.ALeft, scale = .05)
+        self.title = OnscreenText(text="Variable Gravity FPS", pos=(self.ratio-.1, .9), fg=(1,1,1,1), align=TextNode.ARight, scale = .1)
+        self.title = OnscreenText(text="100", pos=(self.ratio-.1, -.9), fg=(1,1,1,1), align=TextNode.ARight, scale = .1)
         self.crosshair = OnscreenImage(image = 'Crosshair16Sharp.png', scale=min((float(self.crosshairSize)/resX), (float(self.crosshairSize)/resY))) 
 #        self.crosshair = OnscreenImage(image = 'Crosshair16Sharp.png', parent=pixel2d, scale=(self.crosshairSize/2.0, 1, self.crosshairSize/2.0), pos=(resX/2.0, 0, -resY/2.0)) 
         self.crosshair.setTransparency(TransparencyAttrib.MAlpha)
-        self.room = loader.loadModel('models/abstractroom')
+        self.room = loader.loadModel('models/world')
         self.room.reparentTo(render)
 
         base.disableMouse()
@@ -84,6 +89,9 @@ class BumpMapDemo(DirectObject):
         self.accept("s-up", self.setLeft, [0, 0])
         self.accept("f", self.setRight, [0, 1])
         self.accept("f-up", self.setRight, [0, 0])
+        self.accept("r", self.setFlip)
+        self.accept("wheel_up", self.setUp)
+        self.accept("wheel_down", self.setDown)
 
         self.lightpivot = render.attachNewNode("lightpivot")
         self.lightpivot.setPos(0,0,25)
@@ -122,6 +130,23 @@ class BumpMapDemo(DirectObject):
     def setRight(self, btn, value):
         self.right[btn] = value
 
+    def setUp(self):
+        if(self.G<self.Gmax):
+            self.G=self.G+self.Gint
+        else:
+            self.G=self.Gmax
+
+    def setDown(self):
+        if(self.G>self.Gmin):
+            self.G=self.G-self.Gint
+        else:
+            self.G=self.Gmin
+    def setFlip(self):
+        if(self.roll==0):
+            self.roll=180
+        else:
+            self.roll=0
+
     def setKey(self, btn, value):
         self.key[btn] = value
 
@@ -137,7 +162,7 @@ class BumpMapDemo(DirectObject):
             self.pitch = self.pitch - (y - 100) * 0.2
         if (self.pitch < -90): self.pitch = -90
         if (self.pitch >  90): self.pitch =  90
-        base.camera.setHpr(self.heading, self.pitch, 0)
+        base.camera.setHpr(self.heading, self.pitch, self.roll)
 
         if self.forward[0] == 1 and self.back[0] == 0: #Move Forward
             self.vXTarg = float(k*self.vXTarg - math.sin(math.radians(self.heading%360)) * self.speed)/(k+1)
@@ -183,7 +208,8 @@ class BumpMapDemo(DirectObject):
         if self.vZ > self.vZTarg and base.camera.getZ() > self.floor:
             self.vZ = self.vZ + self.G * globalClock.getDt()
 
-        if (self.floor >= base.camera.getZ() and self.vZ < 0) or (self.roof <= base.camera.getZ() and self.vZ > 0.0): #Stop moving if you hit the walls 
+        if (self.floor >= base.camera.getZ() and self.vZ < 0): #Stop moving if you hit the floor
+            self.health=self.health+self.vZ
             self.vZ = 0
 
         if math.fabs( self.vX ) > self.speed: self.vX=self.speed
@@ -201,11 +227,12 @@ class BumpMapDemo(DirectObject):
         if (base.camera.getZ() < self.floor): base.camera.setZ(self.floor)
 #        if (base.camera.getZ() >  self.roof): base.camera.setZ(self.roof)
 
-        print str(self.heading%360), str(self.pitch%360)
+#        print str(self.heading%360), str(self.pitch%360)
         if globalClock.getDt() != 0:
             print int(1/globalClock.getDt())
-        print self.vX, self.vY, self.vZ
+#        print self.vX, self.vY, self.vZ
 #        print base.camera.getX(), base.camera.getY()
+        print self.health
         return Task.cont
 
 t = BumpMapDemo()
