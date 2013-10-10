@@ -4,7 +4,7 @@ VariableGravityFPS
 A First Person Shooter game using variable gravity gameplay mechanics.
 
 INSTALLATION
---------
+========
 You must have Panda3D installed for this to work. Download the latest stable version at:
 http://www.panda3d.org/download.php?sdk
 
